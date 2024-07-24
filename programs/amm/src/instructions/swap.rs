@@ -395,50 +395,50 @@ pub fn swap_internal<'b, 'info>(
             );
         }
         // shift tick if we reached the next price
-        if state.sqrt_price_x64 == step.sqrt_price_next_x64 {
-            // if the tick is initialized, run the tick transition
-            if step.initialized {
-                #[cfg(feature = "enable-log")]
-                msg!("loading next tick {}", step.tick_next);
+        // if state.sqrt_price_x64 == step.sqrt_price_next_x64 {
+        //     // if the tick is initialized, run the tick transition
+        //     if step.initialized {
+        //         #[cfg(feature = "enable-log")]
+        //         msg!("loading next tick {}", step.tick_next);
 
-                let mut liquidity_net = next_initialized_tick.cross(
-                    if zero_for_one {
-                        state.fee_growth_global_x64
-                    } else {
-                        pool_state.fee_growth_global_0_x64
-                    },
-                    if zero_for_one {
-                        pool_state.fee_growth_global_1_x64
-                    } else {
-                        state.fee_growth_global_x64
-                    },
-                    &updated_reward_infos,
-                );
-                // update tick_state to tick_array account
-                tick_array_current.update_tick_state(
-                    next_initialized_tick.tick,
-                    pool_state.tick_spacing.into(),
-                    *next_initialized_tick,
-                )?;
+        //         let mut liquidity_net = next_initialized_tick.cross(
+        //             if zero_for_one {
+        //                 state.fee_growth_global_x64
+        //             } else {
+        //                 pool_state.fee_growth_global_0_x64
+        //             },
+        //             if zero_for_one {
+        //                 pool_state.fee_growth_global_1_x64
+        //             } else {
+        //                 state.fee_growth_global_x64
+        //             },
+        //             &updated_reward_infos,
+        //         );
+        //         // update tick_state to tick_array account
+        //         tick_array_current.update_tick_state(
+        //             next_initialized_tick.tick,
+        //             pool_state.tick_spacing.into(),
+        //             *next_initialized_tick,
+        //         )?;
 
-                if zero_for_one {
-                    liquidity_net = liquidity_net.neg();
-                }
-                state.liquidity = liquidity_math::add_delta(state.liquidity, liquidity_net)?;
-            }
+        //         if zero_for_one {
+        //             liquidity_net = liquidity_net.neg();
+        //         }
+        //         state.liquidity = liquidity_math::add_delta(state.liquidity, liquidity_net)?;
+        //     }
 
-            state.tick = if zero_for_one {
-                step.tick_next - 1
-            } else {
-                step.tick_next
-            };
-        } else if state.sqrt_price_x64 != step.sqrt_price_start_x64 {
-            // recompute unless we're on a lower tick boundary (i.e. already transitioned ticks), and haven't moved
-            // if only a small amount of quantity is traded, the input may be consumed by fees, resulting in no price change. If state.sqrt_price_x64, i.e., the latest price in the pool, is used to recalculate the tick, some errors may occur.
-            // for example, if zero_for_one, and the price falls exactly on an initialized tick t after the first trade, then at this point, pool.sqrtPriceX64 = get_sqrt_price_at_tick(t), while pool.tick = t-1. if the input quantity of the
-            // second trade is very small and the pool price does not change after the transaction, if the tick is recalculated, pool.tick will be equal to t, which is incorrect.
-            state.tick = tick_math::get_tick_at_sqrt_price(state.sqrt_price_x64)?;
-        }
+        //     state.tick = if zero_for_one {
+        //         step.tick_next - 1
+        //     } else {
+        //         step.tick_next
+        //     };
+        // } else if state.sqrt_price_x64 != step.sqrt_price_start_x64 {
+        //     // recompute unless we're on a lower tick boundary (i.e. already transitioned ticks), and haven't moved
+        //     // if only a small amount of quantity is traded, the input may be consumed by fees, resulting in no price change. If state.sqrt_price_x64, i.e., the latest price in the pool, is used to recalculate the tick, some errors may occur.
+        //     // for example, if zero_for_one, and the price falls exactly on an initialized tick t after the first trade, then at this point, pool.sqrtPriceX64 = get_sqrt_price_at_tick(t), while pool.tick = t-1. if the input quantity of the
+        //     // second trade is very small and the pool price does not change after the transaction, if the tick is recalculated, pool.tick will be equal to t, which is incorrect.
+        //     state.tick = tick_math::get_tick_at_sqrt_price(state.sqrt_price_x64)?;
+        // }
 
         #[cfg(feature = "enable-log")]
         msg!(
