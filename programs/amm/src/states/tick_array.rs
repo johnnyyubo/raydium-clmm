@@ -346,22 +346,26 @@ impl TickState {
         fee_growth_global_1_x64: u128,
         reward_infos: &[RewardInfo; REWARD_NUM],
     ) -> i128 {
-        self.fee_growth_outside_0_x64 = fee_growth_global_0_x64
-            .checked_sub(self.fee_growth_outside_0_x64)
-            .unwrap();
-        self.fee_growth_outside_1_x64 = fee_growth_global_1_x64
-            .checked_sub(self.fee_growth_outside_1_x64)
-            .unwrap();
+        if let Some(res) = fee_growth_global_0_x64
+            .checked_sub(self.fee_growth_outside_0_x64) {
+            self.fee_growth_outside_0_x64 = res;
+        }
+
+        if let Some(res) = fee_growth_global_1_x64
+            .checked_sub(self.fee_growth_outside_1_x64) {
+            self.fee_growth_outside_1_x64 = res;
+        }
 
         for i in 0..REWARD_NUM {
             if !reward_infos[i].initialized() {
                 continue;
             }
 
-            self.reward_growths_outside_x64[i] = reward_infos[i]
+            if let Some(res) = reward_infos[i]
                 .reward_growth_global_x64
-                .checked_sub(self.reward_growths_outside_x64[i])
-                .unwrap();
+                .checked_sub(self.reward_growths_outside_x64[i]) {
+                self.reward_growths_outside_x64[i] = res;
+            }
         }
 
         self.liquidity_net
