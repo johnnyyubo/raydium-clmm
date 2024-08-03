@@ -308,7 +308,86 @@ impl PoolState {
 
     // Calculates the next global reward growth variables based on the given timestamp.
     // The provided timestamp must be greater than or equal to the last updated timestamp.
-    pub fn update_reward_infos(&mut self, curr_timestamp: u64, epoch as Epoch) -> Result<[RewardInfo; REWARD_NUM]> {
+    pub fn update_reward_infos(&mut self, curr_timestamp: u64) -> Result<[RewardInfo; REWARD_NUM]> {
+        #[cfg(feature = "enable-log")]
+        msg!("current block timestamp:{}", curr_timestamp);
+
+        let mut next_reward_infos = self.reward_infos;
+
+        for i in 0..REWARD_NUM {
+            let reward_info = &mut next_reward_infos[i];
+            if !reward_info.initialized() {
+                continue;
+            }
+            if curr_timestamp <= reward_info.open_time {
+                continue;
+            }
+            let latest_update_timestamp = curr_timestamp.min(reward_info.end_time);
+
+            if self.liquidity != 0 {
+                require_gte!(latest_update_timestamp, reward_info.last_update_time);
+                let time_delta = latest_update_timestamp
+                    .checked_sub(reward_info.last_update_time)
+                    .unwrap();
+
+                let reward_growth_delta = U256::from(time_delta)
+                    .mul_div_floor(
+                        U256::from(reward_info.emissions_per_second_x64),
+                        U256::from(self.liquidity),
+                    )
+                    .unwrap();
+
+                reward_info.reward_growth_global_x64 = reward_info
+                    .reward_growth_global_x64
+                    .checked_add(reward_growth_delta.as_u128())
+                    .unwrap();
+
+                reward_info.reward_total_emissioned = reward_info
+                    .reward_total_emissioned
+                    .checked_add(
+                        U128::from(time_delta)
+                            .mul_div_ceil(
+                                U128::from(reward_info.emissions_per_second_x64),
+                                U128::from(fixed_point_64::Q64),
+                            )
+                            .unwrap()
+                            .as_u64(),
+                    )
+                    .unwrap();
+                #[cfg(feature = "enable-log")]
+                msg!(
+                    "reward_index:{},latest_update_timestamp:{},reward_info.reward_last_update_time:{},time_delta:{},reward_emission_per_second_x64:{},reward_growth_delta:{},reward_info.reward_growth_global_x64:{}, reward_info.reward_claim:{}",
+                    i,
+                    latest_update_timestamp,
+                    identity(reward_info.last_update_time),
+                    time_delta,
+                    identity(reward_info.emissions_per_second_x64),
+                    reward_growth_delta,
+                    identity(reward_info.reward_growth_global_x64),
+                    identity(reward_info.reward_claimed)
+                );
+            }
+            reward_info.last_update_time = latest_update_timestamp;
+            // update reward state
+            if latest_update_timestamp >= reward_info.open_time
+                && latest_update_timestamp < reward_info.end_time
+            {
+                reward_info.reward_state = RewardState::Opening as u8;
+            } else if latest_update_timestamp == next_reward_infos[i].end_time {
+                next_reward_infos[i].reward_state = RewardState::Ended as u8;
+            }
+        }
+        self.reward_infos = next_reward_infos;
+        #[cfg(feature = "enable-log")]
+        msg!("update pool reward info, reward_0_total_emissioned:{}, reward_1_total_emissioned:{}, reward_2_total_emissioned:{}, pool.liquidity:{}",
+        identity(self.reward_infos[0].reward_total_emissioned),identity(self.reward_infos[1].reward_total_emissioned),identity(self.reward_infos[2].reward_total_emissioned), identity(self.liquidity));
+        self.recent_epoch = Clock::get()?.epoch;
+        Ok(next_reward_infos)
+    }
+    
+    // Calculates the next global reward growth variables based on the given timestamp.
+    // The provided timestamp must be greater than or equal to the last updated timestamp.
+    pub fn l_update_reward_infos(&mut self, curr_timestamp: u64, epoch: u64) -> Result<[RewardInfo; REWARD_NUM]> {
         #[cfg(feature = "enable-log")]
         msg!("current block timestamp:{}", curr_timestamp);
 
