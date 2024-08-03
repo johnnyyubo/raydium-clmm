@@ -168,7 +168,7 @@ pub fn l_swap_internal<'b, 'info>(
 
     let liquidity_start = pool_state.liquidity;
 
-    let updated_reward_infos = pool_state.l_update_reward_infos(block_timestamp as u64, epoch as Epoch)?;
+    let updated_reward_infos = pool_state.l_update_reward_infos(block_timestamp as u64, epoch as u64)?;
 
     let mut state = SwapState {
         amount_specified_remaining: amount_specified,
