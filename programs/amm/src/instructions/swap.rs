@@ -149,6 +149,7 @@ pub fn swap_internal<'b, 'info>(
     zero_for_one: bool,
     is_base_input: bool,
     block_timestamp: u32,
+    epoch: u64,
 ) -> Result<(u64, u64)> {
     msg!("Arrived");
     require!(amount_specified != 0, ErrorCode::InvaildSwapAmountSpecified);
@@ -172,7 +173,7 @@ pub fn swap_internal<'b, 'info>(
     let liquidity_start = pool_state.liquidity;
 
     msg!("Arrived4");
-    let updated_reward_infos = pool_state.update_reward_infos(block_timestamp as u64)?;
+    let updated_reward_infos = pool_state.update_reward_infos(block_timestamp as u64, epoch as Epoch)?;
     msg!("Arrived5");
 
     let mut state = SwapState {
