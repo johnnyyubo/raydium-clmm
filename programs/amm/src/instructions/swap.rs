@@ -150,6 +150,7 @@ pub fn swap_internal<'b, 'info>(
     is_base_input: bool,
     block_timestamp: u32,
 ) -> Result<(u64, u64)> {
+    msg!("Arrived");
     require!(amount_specified != 0, ErrorCode::InvaildSwapAmountSpecified);
     if !pool_state.get_status_by_bit(PoolStatusBitIndex::Swap) {
         return err!(ErrorCode::NotApproved);
