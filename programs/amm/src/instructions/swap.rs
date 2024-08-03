@@ -249,11 +249,9 @@ pub fn l_swap_internal<'b, 'info>(
                 is_match_pool_current_tick_array = true;
                 msg!("250");
                 Box::new(*tick_array_current.first_initialized_tick(zero_for_one)?)
-                msg!("252");
             } else {
                 msg!("254");
                 Box::new(TickState::default())
-                msg!("256");
             }
         };
         msg!("259");
