@@ -152,9 +152,11 @@ pub fn swap_internal<'b, 'info>(
 ) -> Result<(u64, u64)> {
     msg!("Arrived");
     require!(amount_specified != 0, ErrorCode::InvaildSwapAmountSpecified);
+    msg!("Arrived2");
     if !pool_state.get_status_by_bit(PoolStatusBitIndex::Swap) {
         return err!(ErrorCode::NotApproved);
     }
+    msg!("Arrived2");
     require!(
         if zero_for_one {
             sqrt_price_limit_x64 < pool_state.sqrt_price_x64
@@ -166,9 +168,12 @@ pub fn swap_internal<'b, 'info>(
         ErrorCode::SqrtPriceLimitOverflow
     );
 
+    msg!("Arrived3");
     let liquidity_start = pool_state.liquidity;
 
+    msg!("Arrived4");
     let updated_reward_infos = pool_state.update_reward_infos(block_timestamp as u64)?;
+    msg!("Arrived5");
 
     let mut state = SwapState {
         amount_specified_remaining: amount_specified,
@@ -186,13 +191,19 @@ pub fn swap_internal<'b, 'info>(
         liquidity: liquidity_start,
     };
 
+    msg!("Arrived6");
     // check observation account is owned by the pool
     require_keys_eq!(observation_state.pool_id, pool_state.key());
+    msg!("Arrived7");
 
+    msg!("Arrived8");
     let (mut is_match_pool_current_tick_array, first_vaild_tick_array_start_index) =
         pool_state.get_first_initialized_tick_array(&tickarray_bitmap_extension, zero_for_one)?;
+    msg!("Arrived9");
+
     let mut current_vaild_tick_array_start_index = first_vaild_tick_array_start_index;
 
+    msg!("Arrived10");
     let mut tick_array_current = tick_array_states.pop_front().unwrap();
     // find the first active tick array account
     for _ in 0..tick_array_states.len() {
@@ -204,6 +215,7 @@ pub fn swap_internal<'b, 'info>(
             .ok_or(ErrorCode::NotEnoughTickArrayAccount)?;
     }
     // check the first tick_array account is owned by the pool
+    msg!("Arrived11");
     require_keys_eq!(tick_array_current.pool_id, pool_state.key());
     // check first tick array account is correct
     require_eq!(
