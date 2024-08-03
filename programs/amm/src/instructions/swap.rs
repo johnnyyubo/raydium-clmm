@@ -189,6 +189,7 @@ pub fn l_swap_internal<'b, 'info>(
     // check observation account is owned by the pool
     require_keys_eq!(observation_state.pool_id, pool_state.key());
 
+    msg!("192");
     let (mut is_match_pool_current_tick_array, first_vaild_tick_array_start_index) =
         pool_state.get_first_initialized_tick_array(&tickarray_bitmap_extension, zero_for_one)?;
 
@@ -196,6 +197,7 @@ pub fn l_swap_internal<'b, 'info>(
 
     let mut tick_array_current = tick_array_states.pop_front().unwrap();
     // find the first active tick array account
+    msg!("200");
     for _ in 0..tick_array_states.len() {
         if tick_array_current.start_tick_index == current_vaild_tick_array_start_index {
             break;
@@ -215,6 +217,7 @@ pub fn l_swap_internal<'b, 'info>(
 
     // continue swapping as long as we haven't used the entire input/output and haven't
     // reached the price limit
+    msg!("220");
     while state.amount_specified_remaining != 0 && state.sqrt_price_x64 != sqrt_price_limit_x64 {
         #[cfg(feature = "enable-log")]
         msg!(
@@ -232,9 +235,11 @@ pub fn l_swap_internal<'b, 'info>(
         // let sqrt_price_x64_before = state.sqrt_price_x64;
         // let liquidity_before = state.liquidity;
 
+        msg!("238");
         let mut step = StepComputations::default();
         step.sqrt_price_start_x64 = state.sqrt_price_x64;
 
+        msg!("242");
         let mut next_initialized_tick = if let Some(tick_state) = tick_array_current
             .next_initialized_tick(state.tick, pool_state.tick_spacing, zero_for_one)?
         {
@@ -242,11 +247,17 @@ pub fn l_swap_internal<'b, 'info>(
         } else {
             if !is_match_pool_current_tick_array {
                 is_match_pool_current_tick_array = true;
+                msg!("250");
                 Box::new(*tick_array_current.first_initialized_tick(zero_for_one)?)
+                msg!("252");
             } else {
+                msg!("254");
                 Box::new(TickState::default())
+                msg!("256");
             }
         };
+        msg!("259");
+
         #[cfg(feature = "enable-log")]
         msg!(
             "next_initialized_tick, status:{}, tick_index:{}, tick_array_current:{}",
@@ -255,6 +266,7 @@ pub fn l_swap_internal<'b, 'info>(
             tick_array_current.key().to_string(),
         );
         if !next_initialized_tick.is_initialized() {
+            msg!("269");
             let next_initialized_tickarray_index = pool_state
                 .next_initialized_tick_array_start_index(
                     &tickarray_bitmap_extension,
