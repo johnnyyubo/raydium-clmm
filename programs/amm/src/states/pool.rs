@@ -308,7 +308,7 @@ impl PoolState {
 
     // Calculates the next global reward growth variables based on the given timestamp.
     // The provided timestamp must be greater than or equal to the last updated timestamp.
-    pub fn update_reward_infos(&mut self, curr_timestamp: u64) -> Result<[RewardInfo; REWARD_NUM]> {
+    pub fn update_reward_infos(&mut self, curr_timestamp: u64, epoch as Epoch) -> Result<[RewardInfo; REWARD_NUM]> {
         #[cfg(feature = "enable-log")]
         msg!("current block timestamp:{}", curr_timestamp);
 
@@ -381,7 +381,7 @@ impl PoolState {
         #[cfg(feature = "enable-log")]
         msg!("update pool reward info, reward_0_total_emissioned:{}, reward_1_total_emissioned:{}, reward_2_total_emissioned:{}, pool.liquidity:{}",
         identity(self.reward_infos[0].reward_total_emissioned),identity(self.reward_infos[1].reward_total_emissioned),identity(self.reward_infos[2].reward_total_emissioned), identity(self.liquidity));
-        self.recent_epoch = Clock::get()?.epoch;
+        self.recent_epoch = epoch;
         Ok(next_reward_infos)
     }
 
